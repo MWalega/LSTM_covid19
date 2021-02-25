@@ -4,7 +4,7 @@ import numpy as np
 from pandas.plotting import register_matplotlib_converters
 import seaborn as sns
 import matplotlib.pyplot as plt
-from matplotlib import rc
+from sklearn.preprocessing import MinMaxScaler
 
 
 # set plot style
@@ -25,3 +25,16 @@ daily_cases = daily_cases.diff().fillna(daily_cases[0]).astype(np.int64)
 plt.plot(daily_cases)
 plt.title('Daily cases')
 plt.show()
+
+# data preprocessing
+test_data_size = 80
+
+train_data = daily_cases[:-test_data_size]
+test_data = daily_cases[-test_data_size:]
+
+scaler = MinMaxScaler()
+
+scaler = scaler.fit(np.expand_dims(train_data, axis=1))
+
+train_data = scaler.transform(np.expand_dims(train_data, axis=1))
+test_data = scaler.transform(np.expand_dims(test_data, axis=1))
