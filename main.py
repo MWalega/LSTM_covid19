@@ -73,7 +73,7 @@ def train_model(
 ):
     loss_fn = torch.nn.MSELoss(reduction='sum')
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
     num_epochs = 60
 
     train_hist = np.zeros(num_epochs)
@@ -86,7 +86,7 @@ def train_model(
 
         loss = loss_fn(y_pred.float(), train_labels)
 
-        if test_data:
+        if test_data is not None:
             with torch.no_grad():
                 y_test_pred = model(test_data)
 
@@ -98,10 +98,26 @@ def train_model(
         elif t % 10 == 0:
             print(f'Epoch {t} train loss: {loss.item()}')
 
-    train_hist[t] = loss.item()
+        train_hist[t] = loss.item()
 
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
     return model.eval(), train_hist, test_hist
+
+# create model
+model = covid19Predictor(
+    input_dim=1,
+    hidden_dim=512,
+    seq_length=seq_length,
+    num_layers=2
+)
+
+model, train_hist, test_hist = train_model(
+    model,
+    X_train,
+    y_train,
+    X_test,
+    y_test
+)
