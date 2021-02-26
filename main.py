@@ -5,6 +5,7 @@ from pandas.plotting import register_matplotlib_converters
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
+from covid19Predictor import covid19Predictor
 
 
 # set plot style
@@ -61,3 +62,46 @@ y_train = torch.from_numpy(y_train).float()
 
 X_test = torch.from_numpy(X_test).float()
 y_test = torch.from_numpy(y_test).float()
+
+# train function
+def train_model(
+        model,
+        train_data,
+        train_labels,
+        test_data,
+        test_labels
+):
+    loss_fn = torch.nn.MSELoss(reduction='sum')
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    num_epochs = 60
+
+    train_hist = np.zeros(num_epochs)
+    test_hist = np.zeros(num_epochs)
+
+    for t in range(num_epochs):
+        model.reset_hidden_state()
+
+        y_pred = model(train_data)
+
+        loss = loss_fn(y_pred.float(), train_labels)
+
+        if test_data:
+            with torch.no_grad():
+                y_test_pred = model(test_data)
+
+                test_loss = loss_fn(y_test_pred.float(), test_labels)
+            test_hist[t] = test_loss.item()
+
+            if t % 10 == 0:
+                print(f'Epoch {t} train loss: {loss.item()} test loss: {test_loss.item()}')
+        elif t % 10 == 0:
+            print(f'Epoch {t} train loss: {loss.item()}')
+
+    train_hist[t] = loss.item()
+
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+    return model.eval(), train_hist, test_hist
