@@ -73,7 +73,7 @@ def train_model(
 ):
     loss_fn = torch.nn.MSELoss(reduction='sum')
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
     num_epochs = 60
 
     train_hist = np.zeros(num_epochs)
@@ -108,10 +108,10 @@ def train_model(
 
 # create model
 model = covid19Predictor(
-    input_dim=1,
-    hidden_dim=512,
+    n_features=1,
+    n_hidden=512,
     seq_length=seq_length,
-    num_layers=2
+    n_layers=2
 )
 
 model, train_hist, test_hist = train_model(
@@ -121,3 +121,9 @@ model, train_hist, test_hist = train_model(
     X_test,
     y_test
 )
+
+# plotting results
+plt.plot(train_hist, label="Training loss")
+plt.plot(test_hist, label="Test loss")
+plt.legend()
+plt.show()

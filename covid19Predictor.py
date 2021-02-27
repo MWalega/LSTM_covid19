@@ -4,37 +4,38 @@ from torch import nn
 
 class covid19Predictor(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, seq_length, num_layers=2):
+    def __init__(self, n_features, n_hidden, seq_length, n_layers=2):
         super(covid19Predictor, self).__init__()
 
-        self.input_dim = input_dim
-        self.hidden_dim = hidden_dim
+        self.n_hidden = n_hidden
         self.seq_length = seq_length
-        self.num_layers = num_layers
+        self.n_layers = n_layers
 
         self.lstm = nn.LSTM(
-            input_size=input_dim,
-            hidden_size=hidden_dim,
-            num_layers=num_layers,
+            input_size=n_features,
+            hidden_size=n_hidden,
+            num_layers=n_layers,
             dropout=0.5
         )
 
-        self.linear = nn.Linear(in_features=hidden_dim, out_features=1)
+        self.linear = nn.Linear(in_features=n_hidden, out_features=1)
 
     def reset_hidden_state(self):
         self.hidden = (
-            torch.zeros(self.num_layers, self.seq_length, self.hidden_dim),
-            torch.zeros(self.num_layers, self.seq_length, self.hidden_dim)
+            torch.zeros(self.n_layers, self.seq_length, self.n_hidden),
+            torch.zeros(self.n_layers, self.seq_length, self.n_hidden)
         )
 
-    def forward(self, input):
-        lstm_out, _ = self.lstm(
-            input.view(len(input), self.seq_length, -1),
+    def forward(self, sequences):
+        lstm_out, self.hidden = self.lstm(
+            sequences.view(len(sequences), self.seq_length, -1),
             self.hidden
         )
 
+
+
         y_pred = self.linear(
-            lstm_out.view(self.seq_length, len(input), self.hidden_dim)[-1]
+            lstm_out.view(self.seq_length, len(sequences), self.n_hidden)[-1]
         )
 
         return y_pred
