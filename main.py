@@ -122,8 +122,42 @@ model, train_hist, test_hist = train_model(
     y_test
 )
 
+# predicting daily cases
+with torch.no_grad():
+  test_seq = X_test[:1]
+  preds = []
+  for _ in range(len(X_test)):
+    y_test_pred = model(test_seq)
+    pred = torch.flatten(y_test_pred).item()
+    preds.append(pred)
+    new_seq = test_seq.numpy().flatten()
+    new_seq = np.append(new_seq, [pred])
+    new_seq = new_seq[1:]
+    test_seq = torch.as_tensor(new_seq).view(1, seq_length, 1).float()
+
+true_cases = scaler.inverse_transform(
+    np.expand_dims(y_test.flatten().numpy(), axis=0)
+).flatten()
+
+predicted_cases = scaler.inverse_transform(
+  np.expand_dims(preds, axis=0)
+).flatten()
+
 # plotting results
-plt.plot(train_hist, label="Training loss")
-plt.plot(test_hist, label="Test loss")
+plt.plot(
+  daily_cases.index[:len(train_data)],
+  scaler.inverse_transform(train_data).flatten(),
+  label='Historical Daily Cases'
+)
+plt.plot(
+  daily_cases.index[len(train_data):len(train_data) + len(true_cases)],
+  true_cases,
+  label='Real Daily Cases'
+)
+plt.plot(
+  daily_cases.index[len(train_data):len(train_data) + len(true_cases)],
+  predicted_cases,
+  label='Predicted Daily Cases'
+)
 plt.legend()
 plt.show()
